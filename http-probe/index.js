@@ -26,18 +26,21 @@ const axiosGet = (url, options = {}) => {
 
 async function sample() {
   const start = new Date();
-  const result = { start: start.toISOString() };
+  const result = { ts: start.toISOString() };
   try {
     const response = await axiosGet(TEST_URL);
     result.code = response.status;
     result.elapsed = Date.now() - start.valueOf();
     result.length = parseInt(response.headers['content-length']);
-    statsBucket.gauge('request.length', result.length);
-    statsBucket.timing('request.timing', result.elapsed);
   } catch (e) {
     result.code = 500;
   }
-  statsBucket.gauge('request.code', result.code);
+  const stats = {
+    timing: `${result.elapsed}|ms`,
+    code: `${result.code}|s`,
+    length: `${result.length}|s`
+  };
+  statsBucket.send(stats);
   return result;
 }
 
